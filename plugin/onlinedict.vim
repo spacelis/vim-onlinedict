@@ -7,12 +7,12 @@ let g:loaded_online_thesaurus = 1
 if !exists('s:onlinedict_did_init')
     let s:script_path = expand("<sfile>:p")
     let s:script_dir = expand("<sfile>:p:h")
-    let s:pylib_dir = fnamemodify(s:script_dir, ':p') . 'pylib'
+    let s:pylib_dir = fnamemodify(s:script_dir, ':p:h:h') . '/pylib'
 python << EOF
-import sys, vim
+import sys, vim, os
 if not vim.eval("s:pylib_dir") in sys.path:
     sys.path.append(vim.eval("s:pylib_dir"))
-from connectors import OxfordDictionaries
+from connectors.dictionaries import OxfordDictionaries
 OD = OxfordDictionaries()
 EOF
     let s:onlinedict_did_init = 1
@@ -32,12 +32,10 @@ function! s:Lookup(word)
     1,$d
 py<<EOF
 page = OD.query(vim.eval('a:word'))
-vim.buffer[:] = page.split('\n')
+vim.current.buffer[:] = page.split('\n')
 EOF
-    echo "Requesting oxforddictionaries.com to look up the word \"" . a:word . "\"..."
-    exec ":silent 0r !" . s:path . "/thesaurus-lookup.sh " . a:word
     normal! Vgqgg
-    exec 'resize ' . (line('$') - 1)
+    exec 'resize ' . (line('$'))
     setlocal nomodifiable filetype=thesaurus
     nnoremap <silent> <buffer> q :q<CR>
 endfunction
