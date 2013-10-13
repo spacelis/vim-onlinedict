@@ -1,7 +1,7 @@
-if exists("g:loaded_online_dictionaries")
+if exists("g:loaded_onlinedict")
     finish
 endif
-let g:loaded_online_thesaurus = 1
+let g:loaded_onlinedict = 1
 
 "---Initialize--------------------------------{{{1
 if !exists('s:onlinedict_did_init')
@@ -26,7 +26,7 @@ set cpo&vim
 let s:path = expand("<sfile>:p:h")
 
 function! s:Lookup(word)
-    silent keepalt belowright split thesaurus
+    silent keepalt belowright split onlinedict
     setlocal noswapfile nobuflisted nospell nowrap modifiable
     setlocal buftype=nofile bufhidden=hide
     1,$d
@@ -36,7 +36,7 @@ vim.current.buffer[:] = page.split('\n')
 EOF
     normal! Vgqgg
     exec 'resize ' . (line('$'))
-    setlocal nomodifiable filetype=thesaurus
+    setlocal nomodifiable filetype=markdown
     nnoremap <silent> <buffer> q :q<CR>
 endfunction
 
