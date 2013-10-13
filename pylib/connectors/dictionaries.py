@@ -12,7 +12,6 @@ Description:
 """
 
 
-from urllib import urlencode
 from StringIO import StringIO
 import requests
 from bs4 import BeautifulSoup as bs
@@ -39,8 +38,7 @@ class Connector(object):
         :returns: @todo
 
         """
-        url = self._base_url + '?' + urlencode(kwargs)
-        return requests.get(url)
+        return requests.get(self._base_url, params=kwargs)
 
 
 def condense(text):
@@ -78,7 +76,8 @@ class OxfordDictionaries(Connector):
         q.update(self._default_kwargs)
         resp = self.get_page(**q)
         resp.encoding = 'UTF-8'
-        return OxfordDictionaries.format(OxfordDictionaries.parse(resp))
+        definitions = OxfordDictionaries.format(OxfordDictionaries.parse(resp))
+        return '\n'.join([definitions, str(resp.url)])
 
     @staticmethod
     def parse(resp):
@@ -87,7 +86,8 @@ class OxfordDictionaries(Connector):
 
         """
         dom = bs(resp.text).find(id='mainContent')
-        #print dom.prettify().encode('utf8')
+        print dom.prettify().encode('utf8')
+        return
         keyword = dom.find('h2', class_="entryTitle").text
         pronunciation = dom\
             .find('div', class_='entryPronunciation')\
@@ -131,20 +131,20 @@ class OxfordDictionaries(Connector):
 
         """
         output = StringIO()
-        print >>output, data['word']
-        print >>output, data['pronunciation']
-        print >>output, ''
+        print >> output, data['word']
+        print >> output, data['pronunciation']
+        print >> output, ''
 
         for sg in data['senses']:
-            print >>output, '---', sg['pos'].upper(), '---'
+            print >> output, '---', sg['pos'].upper(), '---'
             if sg['extra']:
-                print >>output, sg['extra']
+                print >> output, sg['extra']
             for i, s in enumerate(sg['defs']):
-                print >>output, '[%d] %s' % (i + 1, s['definition'])
+                print >> output, '[%d] %s' % (i + 1, s['definition'])
                 for eg in s['example_groups']:
                     if eg['ex_title']:
-                        print >>output, eg['ex_title']
+                        print >> output, eg['ex_title']
                     for e in eg['examples']:
-                        print >>output, '\t*', e
-            print >>output, ''
+                        print >> output, '\t*', e
+            print >> output, ''
         return output.getvalue().strip()
