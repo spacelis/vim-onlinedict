@@ -36,7 +36,7 @@ vim.current.buffer[:] = page.split('\n')
 EOF
     normal! Vgqgg
     exec 'resize ' . (line('$'))
-    setlocal nomodifiable filetype=thesaurus
+    setlocal nomodifiable filetype=markdown
     nnoremap <silent> <buffer> q :q<CR>
 endfunction
 

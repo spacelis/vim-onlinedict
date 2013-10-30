@@ -14,7 +14,12 @@ Description:
 
 from StringIO import StringIO
 import requests
-from bs4 import BeautifulSoup as bs
+from bs4 import BeautifulSoup as BS
+from html2text import html2text
+import re
+
+ITALIANENV = re.compile(r'_\s*([^_]*)\s*_')
+COLONSPACE = re.compile(r':\s*')
 
 
 class Connector(object):
@@ -48,7 +53,7 @@ def condense(text):
     :returns: @todo
 
     """
-    return ' '.join([t.strip() for t in text.split('\n') if len(t.strip())])
+    return '\n'.join([t.strip() for t in text.split('\n') if len(t.strip())])
 
 
 class OxfordDictionaries(Connector):
@@ -77,7 +82,7 @@ class OxfordDictionaries(Connector):
         resp = self.get_page(**q)
         resp.encoding = 'UTF-8'
         definitions = OxfordDictionaries.format(OxfordDictionaries.parse(resp))
-        return '\n'.join([definitions, str(resp.url)])
+        return condense(definitions)
 
     @staticmethod
     def parse(resp):
@@ -85,66 +90,20 @@ class OxfordDictionaries(Connector):
         :returns: @todo
 
         """
-        dom = bs(resp.text).find(id='mainContent')
-        print dom.prettify().encode('utf8')
-        return
-        keyword = dom.find('h2', class_="entryTitle").text
-        pronunciation = dom\
-            .find('div', class_='entryPronunciation')\
-            .find('a')\
-            .text
-        word_sense = list()
-        for sgtag in dom.find_all('section', class_='senseGroup'):
-            postag = sgtag.find('h3', class_="partOfSpeech")
-            pos = postag.text.strip()
-            extra = None
-            if postag.next_sibling.name == 'em':
-                extra = condense(postag.next_sibling.text)
-            defs = list()
-            for stag in sgtag.find_all('li', class_='sense'):
-                df = condense(stag.find('span', class_='definition').text)
-                exs = list()
-                for eg_tag in stag.find_all('span', class_='exampleGroup'):
-                    eg = []
-                    eg_pre = None
-                    for em_tag in eg_tag:
-                        if em_tag.name == 'em' and \
-                                em_tag.has_attr('class') and \
-                                'example' in em_tag['class']:
-                            eg.append(condense(em_tag.text))
-                        else:
-                            eg_pre = condense(em_tag.text)
-                    exs.append({'ex_title': eg_pre, 'examples': eg})
-
-                defs.append({'definition': df, 'example_groups': exs})
-            word_sense.append({'pos': pos,
-                               'extra': extra,
-                               'defs': defs})
-        return {'word': keyword,
-                'pronunciation': pronunciation,
-                'senses': word_sense}
+        dom = BS(resp.text).find(id='mainContent')
+        dom.find('span', class_='TranslationCrossLinks').decompose()
+        for t in dom.findAll('em', class_='example'):
+            t.name = 'span'
+        txt = html2text(str(dom).decode('utf-8'))
+        return txt
 
     @staticmethod
     def format(data):
-        """ Format the data from returned
+        """ Format the data from returned.
         :returns: @todo
 
         """
-        output = StringIO()
-        print >> output, data['word']
-        print >> output, data['pronunciation']
-        print >> output, ''
-
-        for sg in data['senses']:
-            print >> output, '---', sg['pos'].upper(), '---'
-            if sg['extra']:
-                print >> output, sg['extra']
-            for i, s in enumerate(sg['defs']):
-                print >> output, '[%d] %s' % (i + 1, s['definition'])
-                for eg in s['example_groups']:
-                    if eg['ex_title']:
-                        print >> output, eg['ex_title']
-                    for e in eg['examples']:
-                        print >> output, '\t*', e
-            print >> output, ''
-        return output.getvalue().strip()
+        data = '\n'.join([l.strip() for l in data.split('\n') if len(l)])
+        data = ITALIANENV.sub(r'_\1_', data)
+        data = COLONSPACE.sub(r': ', data)
+        return data
