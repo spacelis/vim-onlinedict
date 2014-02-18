@@ -15,7 +15,6 @@ Description:
 from StringIO import StringIO
 import requests
 from bs4 import BeautifulSoup as bs
-from html2text import html2text
 
 
 class Connector(object):
@@ -49,7 +48,7 @@ def condense(text):
     :returns: @todo
 
     """
-    return ' '.join([t.strip() for t in text.split('\n') if len(t.strip())])
+    return '\n'.join([t.strip() for t in text.split('\n') if len(t.strip())])
 
 
 class OxfordDictionaries(Connector):
@@ -78,7 +77,7 @@ class OxfordDictionaries(Connector):
         resp = self.get_page(**q)
         resp.encoding = 'UTF-8'
         definitions = OxfordDictionaries.format(OxfordDictionaries.parse(resp))
-        return '\n'.join([definitions, str(resp.url)])
+        return condense(definitions)
 
     @staticmethod
     def parse(resp):
