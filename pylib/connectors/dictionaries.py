@@ -20,6 +20,7 @@ import re
 
 ITALIANENV = re.compile(r'_\s*([^_]*)\s*_')
 COLONSPACE = re.compile(r':\s*')
+ORDINAL = re.compile(r'\b([0-9]+)')
 
 
 class Connector(object):
@@ -90,10 +91,13 @@ class OxfordDictionaries(Connector):
         :returns: @todo
 
         """
-        dom = BS(resp.text).find(id='mainContent')
-        dom.find('span', class_='TranslationCrossLinks').decompose()
-        for t in dom.findAll('em', class_='example'):
-            t.name = 'span'
+        dom = BS(resp.text).find(class_='entryPageContent')
+        children = dom.children
+        children.next()
+        content_tag = children.next()
+        #import pudb; pudb.set_trace()
+        for a in dom.findAll('a'):
+            a.decompose()
         txt = html2text(str(dom).decode('utf-8'))
         return txt
 
@@ -106,4 +110,5 @@ class OxfordDictionaries(Connector):
         data = '\n'.join([l.strip() for l in data.split('\n') if len(l)])
         data = ITALIANENV.sub(r'_\1_', data)
         data = COLONSPACE.sub(r': ', data)
+        data = ORDINAL.sub(r'\1 ', data)
         return data
