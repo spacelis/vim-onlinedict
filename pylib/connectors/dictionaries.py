@@ -15,6 +15,7 @@ Description:
 from StringIO import StringIO
 import requests
 from bs4 import BeautifulSoup as bs
+import subprocess as sp
 
 
 class Connector(object):
@@ -85,15 +86,32 @@ class OxfordDictionaries(Connector):
         :returns: @todo
 
         """
-        dom = bs(resp.text).find(id='mainContent')
-        return unicode(dom)
+        dom = bs(resp.text)
+        tag = dom.find(class_='entryPageContent')
+        links = list(tag.findAll('a'))
+        for a in links:
+            if a.string and ('ore example' not in a.string)\
+                    and ('View synonyms' not in a.string):
+                em = dom.new_tag('em')
+                s = dom.new_string(a.string)
+                em.append(s)
+                a.replace_with(em)
+            else:
+                a.decompose()
+        tag.find(class_='sound').decompose()
+        tag.find('div', class_='etymology').decompose()
+        return unicode(tag)
 
     @staticmethod
-    def format(snippet):
-        """ Format the snippet
+    def format(page):
+        """ Format the page
 
-        :snippet: @todo
+        :page: @todo
         :returns: @todo
 
         """
-        return html2text(snippet).strip()
+        pandoc = sp.Popen(['pandoc', '-f', 'html', '-t', 'markdown_github'],
+                          stdin=sp.PIPE, stdout=sp.PIPE)
+        pandoc.stdin.write(page.encode('utf-8'))
+        pandoc.stdin.close()
+        return pandoc.stdout.read()
