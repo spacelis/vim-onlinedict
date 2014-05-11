@@ -45,7 +45,7 @@ if !exists('g:online_dictionaries_map_keys')
 endif
 
 if g:online_dictionaries_map_keys
-    nnoremap <unique> -K :OnlineDictionariesCurrentWord<CR>
+    nnoremap <unique> <A-k> :OnlineDictionariesCurrentWord<CR>
 endif
 
 command! OnlineDictionariesCurrentWord :call <SID>Lookup(expand('<cword>'))

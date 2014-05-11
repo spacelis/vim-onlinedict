@@ -15,6 +15,7 @@ Description:
 from StringIO import StringIO
 import requests
 from bs4 import BeautifulSoup as bs
+from bs4.element import Comment
 import subprocess as sp
 
 
@@ -88,7 +89,12 @@ class OxfordDictionaries(Connector):
         """
         dom = bs(resp.text)
         tag = dom.find(class_='entryPageContent')
+        if not tag:
+            tag = dom.find(class_='responsive_cell_center')
+            return unicode(tag)
         links = list(tag.findAll('a'))
+        [c.decompose() for c in tag.find_all(lambda t: t is Comment)]
+
         for a in links:
             if a.string and ('ore example' not in a.string)\
                     and ('View synonyms' not in a.string):
