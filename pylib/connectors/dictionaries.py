@@ -104,8 +104,14 @@ class OxfordDictionaries(Connector):
                 a.replace_with(em)
             else:
                 a.decompose()
-        tag.find(class_='sound').decompose()
-        tag.find('div', class_='etymology').decompose()
+        try:
+            tag.find(class_='sound').decompose()
+        except AttributeError:
+            pass
+        try:
+            tag.find('div', class_='etymology').decompose()
+        except AttributeError:
+            pass
         return unicode(tag)
 
     @staticmethod
