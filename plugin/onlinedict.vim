@@ -40,16 +40,27 @@ EOF
     nnoremap <silent> <buffer> q :q<CR>
 endfunction
 
+
+function! s:LookupSelected()
+    let old_x = @x
+    normal gv"xy
+    let word = @x
+    call s:Lookup(word)
+    let @x = old_x
+endfunction
+    
+
 if !exists('g:online_dictionaries_map_keys')
     let g:online_dictionaries_map_keys = 1
 endif
 
 if g:online_dictionaries_map_keys
     nnoremap <unique> <A-k> :OnlineDictionariesCurrentWord<CR>
+    vnoremap <unique> <A-k> :OnlineDictionariesLookupSelected<CR>
 endif
 
-command! OnlineDictionariesCurrentWord :call <SID>Lookup(expand('<cword>'))
-command! OnlineDictionariesLookup :call <SID>Lookup(expand('<cword>'))
-command! -nargs=1 Dictionaries :call <SID>Lookup(<f-args>)
+command! OnlineDictionariesCurrentWord call <SID>Lookup(expand('<cword>'))
+command! -range OnlineDictionariesLookupSelected <line1>,<line2>call <SID>LookupSelected()
+command! -nargs=1 OnlineDictionariesLookup call <SID>Lookup(<f-args>)
 
 let &cpo = s:save_cpo
