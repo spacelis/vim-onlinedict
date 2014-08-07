@@ -38,6 +38,8 @@ EOF
     exec 'resize ' . (line('$'))
     setlocal nomodifiable filetype=markdown
     nnoremap <silent> <buffer> q :q<CR>
+    nnoremap <silent> <buffer> n /^### noun<CR>
+    nnoremap <silent> <buffer> v /^### verb<CR>
 endfunction
 
 
